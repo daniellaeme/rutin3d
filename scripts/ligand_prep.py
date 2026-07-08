@@ -1,3 +1,4 @@
+import os
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
@@ -84,9 +85,13 @@ def ligand_prep(smiles):
     best_conf_id = unique_confs[0]  # Retrieve the conformer with the absolute lowest energy after RMSD pruning.
     print(f'Best conformer ID: {best_conf_id}')
 
-    writer = Chem.SDWriter('best_rutin.sdf')
-    writer.write(mol_h, best_conf_id)
-    writer.close()
-    print('Best conformer saved!')
+    full_path = '././data/processed/best_rutin.sdf'
+    if os.path.exists(full_path):
+        print('f"File "{full_path}" already exists! Skipping save to prevent overwrite."')
+    else:
+        writer = Chem.SDWriter('best_rutin.sdf')
+        writer.write(mol_h, best_conf_id)
+        writer.close()
+        print(f'Best conformer saved to {full_path}!')
 
     return unique_confs

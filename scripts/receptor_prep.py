@@ -141,7 +141,7 @@ def receptor_prep(protein_name: str, file_path: str, target_ligand_name: str):
                 return self.keep_cofactor  # Retain or remove cofactor depending on target modeling hypothesis
             return True  # Accept standard protein residues (amino acids)
 
-    clean_receptor_path = 'receptor_clean.pdb'
+    clean_receptor_path = '././data/processed/receptor_clean.pdb'
 
     io = PDBIO()
     io.set_structure(structure)

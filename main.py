@@ -5,16 +5,15 @@ if __name__ == '__main__':
 
     # Ligand Preparation - Pubchem CID 5280805 - Rutin
     smiles = 'C[C@H]1[C@@H]([C@H]([C@H]([C@@H](O1)OC[C@@H]2[C@H]([C@@H]([C@H]([C@@H](O2)OC3=C(OC4=CC(=CC(=C4C3=O)O)O)C5=CC(=C(C=C5)O)O)O)O)O)O)O)O'
-    # try:
-    #     ligand_prep(smiles)
-    #     print('\n Successfully prepared ligand!')
-    # except ValueError:
-    #     print(f'Error: {smiles} invalid.')
+    try:
+        ligand_prep(smiles)
+        print('\n Successfully prepared ligand!')
+    except ValueError:
+        print(f'Error: {smiles} invalid.')
 
 
     # Receptor Preparation
-
-    with open("4AL0.pdb", "r") as f:
+    with open("././data/raw/4AL0.pdb", "r") as f:
         het_names = set()
         for line in f:
             if line.startswith("HETSYN"):
@@ -28,7 +27,7 @@ if __name__ == '__main__':
         print("Found chemical entities in file:", het_names)
 
     protein_name = '4AL0'
-    file_path = './4AL0.pdb'
+    file_path = '././data/raw/4AL0.pdb'
     native_ligand = 'GSH'
     try:
         clean_path, (cx, cy, cz) = receptor_prep(protein_name, file_path, target_ligand_name=native_ligand)
