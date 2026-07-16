@@ -1,5 +1,6 @@
 from scripts.ligand_prep import ligand_prep
 from scripts.receptor_prep import receptor_prep
+from scripts.docking_prep import prep_ligand_pdbqt, prep_receptor_pdbqt, run_vina_docking
 
 if __name__ == '__main__':
 
@@ -38,5 +39,21 @@ if __name__ == '__main__':
         print(f"  --center_y {cy:.3f}")
         print(f"  --center_z {cz:.3f}")
         print(f"  --size_x 22.0 --size_y 22.0 --size_z 22.0")
+
+        # Convert files to PDBQT format
+        lig_pdbqt = prep_ligand_pdbqt('././data/processed/best_rutin.sdf', '././data/processed/rutin_prepared.pdbqt')
+        rec_pdbqt = prep_receptor_pdbqt('././data/processed/receptor_clean.pdb',
+                                        '././data/processed/receptor_prepared.pdbqt')
+
+        # Run Docking Simulation using calculated coordinates
+        best_score = run_vina_docking(
+            receptor_pdbqt=rec_pdbqt,
+            ligand_pdbqt=lig_pdbqt,
+            center_coords=[cx, cy, cz]
+        )
+
+        print(f"\nSimulation successful. Top binding score: {best_score:.2f} kcal/mol")
+
+
     except FileNotFoundError:
         print(f"\nError: '{file_path}' not found! Please download it from rcsb.org/structure/4AL0")
