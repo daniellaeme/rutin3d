@@ -3,7 +3,6 @@ from rdkit import Chem
 from meeko import MoleculePreparation, PDBQTWriterLegacy
 from openbabel import openbabel
 import subprocess
-# from vina import Vina
 
 def prep_ligand_pdbqt(input_sdf_path, output_pdbqt_path):
     """
@@ -33,8 +32,8 @@ def prep_ligand_pdbqt(input_sdf_path, output_pdbqt_path):
     if not is_ok:
         raise RuntimeError(f"Meeko writing failed: {error_msg}")
 
-
     # Safely save to file without overwriting your original SDF
+    os.makedirs(os.path.dirname(output_pdbqt_path), exist_ok=True)
     with open(output_pdbqt_path, 'w') as f:
         f.write(pdbqt_string)
 
@@ -64,13 +63,11 @@ def prep_receptor_pdbqt(input_pdb_path, output_pdbqt_path):
     # Add polar hydrogens ONLY (True, False, 7.4)
     # This aligns the receptor with Vina's united-atom scoring parameters
     mol.AddHydrogens(True, False, 7.4)
-    if not ob_conv.WriteFile(mol, output_pdbqt_path):
-        raise IOError(f"Could not write output file: {output_pdbqt_path}")
-    print("[1/2] Polar hydrogens added to receptor side-chains.")
 
     # Write coordinates to PDBQT format
     if not ob_conv.WriteFile(mol, output_pdbqt_path):
-        raise IOError(f"Could not write prepared receptor file: {output_pdbqt_path}")
+        raise IOError(f"Could not write output file: {output_pdbqt_path}")
+    print("[1/2] Polar hydrogens added to receptor side-chains.")
 
     # READ the file OpenBabel created
     with open(output_pdbqt_path, "r") as f:
@@ -88,15 +85,20 @@ def prep_receptor_pdbqt(input_pdb_path, output_pdbqt_path):
     return output_pdbqt_path
 
 
-def run_vina_docking(receptor_pdbqt, ligand_pdbqt, center_coords, box_size=22.0):
+def run_vina_docking(receptor_pdbqt, ligand_pdbqt, center_coords, box_size=22.0, output_poses_path=None, log_path=None):
     """
     Runs the standalone Vina executable using Python's subprocess module
     and extracts the binding affinity energy table.
     """
     print("\nStarting AutoDock Vina Standalone Executable")
 
-    output_poses_path = 'rutin_docked_poses.pdbqt'
-    log_path = 'vina_docking.log'
+    if output_poses_path is None:
+        output_poses_path = os.path.join('.', 'data', 'processed', 'docking', 'rutin_docked_poses.pdbqt')
+    if log_path is None:
+        log_path = os.path.join('.', 'data', 'processed', 'docking', 'vina_docking.log')
+
+    os.makedirs(os.path.dirname(output_poses_path), exist_ok=True)
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
 
     # Build the exact command line arguments for your Windows .\vina.exe
     cmd = [
@@ -121,7 +123,6 @@ def run_vina_docking(receptor_pdbqt, ligand_pdbqt, center_coords, box_size=22.0)
     # Run the compiled Vina binary and redirect outputs to a log file
     with open(log_path, 'w', encoding='utf-8') as log_file:
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=0)
-        # result = subprocess.run(cmd, stdout=log_file, stderr=subprocess.STDOUT, text=True) #  capture_output=True,
 
         while True:
             char = process.stdout.read(1)
@@ -132,9 +133,6 @@ def run_vina_docking(receptor_pdbqt, ligand_pdbqt, center_coords, box_size=22.0)
             log_file.write(char)  # Write to backup log file
 
         process.wait()
-    # Re-read the log to show the output in terminal so it doesn't look frozen
-    # with open(log_path, "r") as log_file:
-    #     print(log_file.read())
 
     if process.returncode != 0:
         raise RuntimeError(f"Vina failed with error:\n{process.stderr}")
@@ -156,70 +154,4 @@ def run_vina_docking(receptor_pdbqt, ligand_pdbqt, center_coords, box_size=22.0)
                     pass
                 break
 
-    # for line in result.stdout.splitlines():
-    #     if "   1 " in line:  # Finds the line starting with mode 1
-    #         best_score = float(line.split()[1])  # Grabs the second item (-7.442)
-    #         break
-    # found_table = False
-    #
-    # with open(log_path, "r") as log_file:
-    #     for line in log_file:
-    #         # Check for the Vina result header
-    #         if "mode |   affinity" in line or "-----+" in line:
-    #             found_table = True
-    #             print(line.strip())
-    #             continue
-    #
-    #         # Print and capture the score lines
-    #         if found_table and line.strip() and line.strip()[0].isdigit():
-    #             print(line.strip())
-    #             parts = line.split()
-    #             # The first parsed score line represents the top binding pose (index 1)
-    #             if best_score == 0.0:
-    #                 best_score = float(parts[1])
-    #         elif found_table and not line.strip():
-    #             # Stop parsing once the empty space below the table is hit
-    #             found_table = False
-
     return best_score
-
-
-# def run_vina_docking(receptor_pdbqt, ligand_pdbqt, center_coords, box_size=22.0):
-#     """
-#     Instantiates AutoDock Vina, pre-computes interaction grids,
-#     and runs a 32-thread Monte Carlo conformational docking search.
-#     """
-#     print("\nStarting AutoDock Vina Docking Engine")
-#
-#     # Instantiate the engine using the standard Vina empirical scoring function
-#     v = Vina(sf_name='vina')
-#
-#     # Load input PDBQT files
-#     v.set_receptor(receptor_pdbqt)
-#     v.set_ligand_from_file(ligand_pdbqt)
-#     print("[1/4] Receptor and Ligand files loaded into docking memory.")
-#
-#     # Define grid box dimensions
-#     grid_size = [box_size, box_size, box_size]
-#     print(f"[2/4] Bounding box centered at: {center_coords} with size {grid_size}")
-#
-#     # Calculate grid-based interaction potentials
-#     v.compute_vina_maps(center=center_coords, size=grid_size)
-#     print("[3/4] Interaction affinity grid maps successfully pre-calculated.")
-#
-#     # Launch global Monte Carlo search
-#     print("[*] Launching Monte Carlo search. Exhaustiveness set to 32...")
-#     v.dock(exhaustiveness=32, n_poses=9)
-#
-#     # Write output poses to disk
-#     output_poses_path = 'rutin_docked_poses.pdbqt'
-#     v.write_poses(output_poses_path, n_poses=9, overwrite=True)
-#
-#     # Print quantitative scoring table
-#     print("\nDOCKING RESULTS")
-#     energies = v.energies()
-#     for idx, energy in enumerate(energies):
-#         print(f" Pose {idx + 1:2d} | Free Energy of Binding (ΔG): {energy[0]:6.2f} kcal/mol")
-#
-#     return energies[0][0]
-

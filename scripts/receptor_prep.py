@@ -1,16 +1,15 @@
+import os
 import numpy as np
 from Bio.PDB import PDBParser, PDBIO, Select
 
 
-def receptor_prep(protein_name: str, file_path: str, target_ligand_name: str):
-
+def prep_receptor(protein_name: str, file_path: str, target_ligand_name: str, output_path=os.path.join('.', 'data', 'processed', 'receptor_prep', 'receptor_clean.pdb')):
     '''
-
+    Parses, cleans, isolates, and prepares receptor structures.
+    Preserves cofactors and outputs directly to receptor_prep subdirectory.
     :param pdb:
     :return:
     '''
-
-
 
     # 1
     # Parse the raw PDB file
@@ -25,7 +24,6 @@ def receptor_prep(protein_name: str, file_path: str, target_ligand_name: str):
 
     print('\n[1/5]')
     print('PDB file successfully parsed')
-
 
     # 2
     # Dynamically locate the native ligand
@@ -46,8 +44,6 @@ def receptor_prep(protein_name: str, file_path: str, target_ligand_name: str):
     print('\n[2/5]')
     print(f'Located target ligand "{target_ligand_name}" inside Chain "{host_chain_id}"')
 
-
-
     # 3
     # Calculate the 3D Docking Centroid of the active site
     # Extract the [x, y, z] coordinates of every single atom belonging to 'LVG'
@@ -62,8 +58,6 @@ def receptor_prep(protein_name: str, file_path: str, target_ligand_name: str):
     print(f'\n[3/5]')
     print(f'Calculated active site Centroid based on native {target_ligand_name}:')
     print(center_x, center_y, center_z)
-
-
 
     # 4
     # Spatial Detection of Interfacial Partner Chain
@@ -141,22 +135,25 @@ def receptor_prep(protein_name: str, file_path: str, target_ligand_name: str):
                 return self.keep_cofactor  # Retain or remove cofactor depending on target modeling hypothesis
             return True  # Accept standard protein residues (amino acids)
 
-    clean_receptor_path = '././data/processed/receptor_clean.pdb'
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     io = PDBIO()
     io.set_structure(structure)
     # The 'keep_cofactor=True' default maintains the cofactor-bound state.
     # Set to 'False' if modeling an apo-state docking hypothesis.
-    io.save(clean_receptor_path, select=CustomFilter(host=host_chain_id, partner=partner_chain_id, keep_cofactor=True, cofactor_name=target_ligand_name))  # Pass custom filter to the select parameter
+    io.save(output_path,
+            select=CustomFilter(host=host_chain_id, partner=partner_chain_id, keep_cofactor=True, cofactor_name=target_ligand_name)
+    )  # Pass custom filter to the select parameter
     print(f'\n[5/5]')
     if partner_chain_id:
         print(f'Interfacial dimer (Chains {host_chain_id} & {partner_chain_id}) successfully isolated and cleaned!')
     else:
         print(f'Monomer (Chain {host_chain_id}) successfully isolated and cleaned!')
 
-    print(f'Saved cleaned structural coordinates to: "{clean_receptor_path}"')
+    print(f'Saved cleaned structural coordinates to: "{output_path}"')
 
-    return clean_receptor_path, (center_x, center_y, center_z)
+    return output_path, (center_x, center_y, center_z)
 
 
 

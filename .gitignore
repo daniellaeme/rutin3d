@@ -1,3 +1,4 @@
 .idea/
 
-/vina_1.2.7_win.exe
+__pycache__/
+*.pyc

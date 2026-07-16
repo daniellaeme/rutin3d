@@ -3,29 +3,29 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 
 
-def ligand_prep(smiles):
+def prep_ligand(smiles, output_path=os.path.join('.', 'data', 'processed', 'ligand_prep', 'best_rutin.sdf')):
     """
     This function takes in the smiles string, adds hydrogen molecules, performs ETKDG v3 Embedding (N=50),
     MMFF Optimization, Calculates the Energies, Sorts according to the threshold and performs Heavy Atom Pruning.
+    Saves the final structure directly to the specified ligand_prep destination.
     :param smiles:
     :return: unique_confs
     """
 
     # Load SMILES and add Hydrogen
     mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        raise ValueError('SMILES is not valid!')
     mol_h = Chem.AddHs(mol)
-
 
     # Configure ETKDGv3 parameters
     params = AllChem.ETKDGv3()
     params.randomSeed = 42
     params.useBasicKnowledge = True     # Enforces basic chemical rules
 
-
     # Embed Conformers
     num_confs = 50
     cids = AllChem.EmbedMultipleConfs(mol_h, num_confs, params)
-
 
     # Optimise properties and Calculate Energies (Get MMFF94 Force Field)
     optm = AllChem.MMFFOptimizeMoleculeConfs(mol_h, maxIters=1000, mmffVariant='MMFF94')     # Returns a list of (converged_status, energy) tuples
@@ -40,14 +40,6 @@ def ligand_prep(smiles):
         else:
             print(f"Conformer {cid} did not converge within the iteration limit.")
 
-        # mp = AllChem.MMFFGetMoleculeProperties(mol_h, mmffVariant='MMFF94')    # Retrieve MMFF properties for the molecule
-        # ff = AllChem.MMFFGetMoleculeForceField(mol_h, mp, confId=cid)          # Construct the Merck Molecular Force Field for the specific conformer
-        # ff.Initialize()
-        # ff.Minimize(maxIts=500)                                                 # Minimise
-        # energy = ff.CalcEnergy()                                                # Calculate Energy
-        # conf_energies.append((cid, energy))
-
-
     # Energy Threshold Filtering (Threshold = 5.0 kcal/mol)
     sorted_confs = sorted(conf_energies, key=lambda x: x[1])            # List sorted in ascending order based on energy value.
     if not sorted_confs:
@@ -58,7 +50,6 @@ def ligand_prep(smiles):
     allowed_confs = [c for c in sorted_confs if c[1] - min_energy <= threshold]     # Conformers with a relative energy to the global minimum conformation <= 5.0 kcal/mol
 
     print(f'{len(allowed_confs)} conformations <= {threshold} found')
-
 
     # RMSD Pruning
     unique_confs = []
@@ -85,13 +76,13 @@ def ligand_prep(smiles):
     best_conf_id = unique_confs[0]  # Retrieve the conformer with the absolute lowest energy after RMSD pruning.
     print(f'Best conformer ID: {best_conf_id}')
 
-    full_path = '././data/processed/best_rutin.sdf'
-    if os.path.exists(full_path):
-        print('f"File "{full_path}" already exists! Skipping save to prevent overwrite."')
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    if os.path.exists(output_path):
+        print(f'f"File "{output_path}" already exists! Skipping save to prevent overwrite."')
     else:
-        writer = Chem.SDWriter('best_rutin.sdf')
+        writer = Chem.SDWriter(output_path)
         writer.write(mol_h, best_conf_id)
         writer.close()
-        print(f'Best conformer saved to {full_path}!')
+        print(f'Best conformer saved to {output_path}!')
 
     return unique_confs
