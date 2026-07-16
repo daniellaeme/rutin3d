@@ -40,43 +40,40 @@ The docking simulation successfully identified the binding mode of Rutin within 
 
 ## Project Structure
 ```bash
-rutin3d/
-├── .gitignore
-├── LICENSE
-├── README.md
-├── data/
-│   ├── processed/
-│   │   ├── docking/
-│   │   │   ├── receptor_prepared.pdbqt
-│   │   │   ├── rutin_docked_poses.pdbqt
-│   │   │   └── rutin_prepared.pdbqt
-│   │   ├── generate_complex/
-│   │   │   ├── RUTIN_MPGES1_COMPLEX_PROTEIN_GSH_A_1153.png
-│   │   │   ├── RUTIN_MPGES1_COMPLEX_PROTEIN_GSH_A_1153.pse
-│   │   │   ├── report.txt
-│   │   │   └── report.xml
-│   │   ├── ligand_prep/
-│   │   │   └── best_rutin.sdf
-│   │   └── receptor_prep/
-│   │       └── receptor_clean.pdb
-│   └── raw/
-│       └── 4AL0.pdb
-├── main.py
-├── requirements.txt
-├── results/
-│   ├── rutin_docking_final.png
-│   ├── rutin_mpges1_complex.pdb
-│   ├── style_complex.pml
-│   └── vina_docking.log
-├── scripts/
-│   ├── __pycache__/
-│   │   ├── ligand_prep.cpython-312.pyc
-│   │   └── receptor_prep.cpython-312.pyc
-│   ├── docking.py
-│   ├── generate_complex.py
-│   ├── ligand_prep.py
-│   └── receptor_prep.py
-└── vina.exe
+📁 rutin3d/
+    ├── 📄 .gitignore
+    ├── 📄 LICENSE
+    ├── 📄 README.md
+    ├── 📁 data/
+    │   ├── 📁 processed/
+    │   │   ├── 📁 docking/
+    │   │   │   ├── 📄 receptor_prepared.pdbqt
+    │   │   │   ├── 📄 rutin_docked_poses.pdbqt
+    │   │   │   └── 📄 rutin_prepared.pdbqt
+    │   │   ├── 📁 generate_complex/
+    │   │   │   ├── 🖼️ RUTIN_MPGES1_COMPLEX_PROTEIN_GSH_A_1153.png
+    │   │   │   ├── 📄 RUTIN_MPGES1_COMPLEX_PROTEIN_GSH_A_1153.pse
+    │   │   │   ├── 📄 report.txt
+    │   │   │   └── 📄 report.xml
+    │   │   ├── 📁 ligand_prep/
+    │   │   │   └── 📄 best_rutin.sdf
+    │   │   └── 📁 receptor_prep/
+    │   │       └── 📄 receptor_clean.pdb
+    │   └── 📁 raw/
+    │       └── 📄 4AL0.pdb
+    ├── 📄 main.py
+    ├── 📄 requirements.txt
+    ├── 📁 results/
+    │   ├── 🖼️ rutin_docking_final.png
+    │   ├── 📄 rutin_mpges1_complex.pdb
+    │   ├── 📄 style_complex.pml
+    │   └── 📄 vina_docking.log
+    ├── 📁 scripts/
+    │   ├── 📄 docking.py
+    │   ├── 📄 generate_complex.py
+    │   ├── 📄 ligand_prep.py
+    │   └── 📄 receptor_prep.py
+    └── 📄 vina.exe
 ```
 
 ## How to Run
